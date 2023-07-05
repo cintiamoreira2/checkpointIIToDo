@@ -12,6 +12,9 @@ const openTasksListRef = document.querySelector('#openTasksList')
 
 const novaTarefaRef = document.getElementById('novaTarefa');
 
+const closedTasksListRef = document.querySelector('#closedTasksList');
+
+
 // Objeto que armazenara os Headers utilizados nas Requests
 const requestHeadersAuth = {
     "Accept": "application/json",
@@ -36,13 +39,11 @@ function logOut() {
     // Redirecionamento para o Login
     window.location.href = './../index.html'
 }
+
+
 // construir a request de Delete aqui :)
 function deleteTask(task) {
-    let taskDelete = task
-    // console.log(taskDelete)
-    taskDelete.delete = true
-    // console.log(taskDelete)
-
+  
     const requestSettings = {
         method: 'DELETE',
         headers: requestHeadersAuth
@@ -133,12 +134,7 @@ function insertTasksHtml() {
     }
 
     // Construa aqui a Logica para inserir as Tarefas Concluidas na Lista de Tarefas Concluidas no HTML
-    
-
-// Funcao que ira inserir as tarefas concluidas no HTML
-function insertClosedTasksHtml() {
     // Referencia da Lista de Tarefas Concluidas
-const closedTasksListRef = document.querySelector('#closedTasksList');
   // Remocao de todos os elementos dentro da Lista de Tarefas Concluidas
   closedTasksListRef.innerHTML = '';
 
@@ -158,7 +154,6 @@ const closedTasksListRef = document.querySelector('#closedTasksList');
           </div>
       </li>
     `
-  }
 }
     // Muito importante que a logica esteja antes da Funcao addEventListenersToTasks()
 
