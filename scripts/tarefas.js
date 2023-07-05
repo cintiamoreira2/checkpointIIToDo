@@ -2,13 +2,15 @@
 const apiBaseUrl = 'https://todo-api.ctd.academy/v1'
 
 // Token obtido no Login que foi salvo no localStorage
-const token = localStorage.getItem('jwt')
+const jwt = localStorage.getItem('jwt')
 
 // Referencia do Botao de Submit para cadastrar uma nova Tarefa
 const submitButtonNewTaskRef = document.querySelector('#submitButtonNewTask')
 
 // Referencia da Lista de Tarefas em Aberta
 const openTasksListRef = document.querySelector('#openTasksList')
+
+const novaTarefaRef = document.getElementById('novaTarefa');
 
 // Objeto que armazenara os Headers utilizados nas Requests
 const requestHeadersAuth = {
@@ -23,20 +25,36 @@ var userTasks = {
     closeds: [] // Array utilizado para armazenar as nossas tarefas concluidas
 }
 
+const closeApp = document.getElementById('closeApp');
+closeApp.addEventListener('click', logOut);
+
 // Funcao que realiza o Logout
 function logOut() {
 
     // Limpeza no localStorage
     localStorage.clear()
     // Redirecionamento para o Login
-    window.location.href = 'index.html'
-
+    window.location.href = './../index.html'
 }
-
+// construir a request de Delete aqui :)
 function deleteTask(task) {
+    let taskDelete = task
+    // console.log(taskDelete)
+    taskDelete.delete = true
+    // console.log(taskDelete)
 
-    // construir a request de Delete aqui :)
+    const requestSettings = {
+        method: 'DELETE',
+        headers: requestHeadersAuth
+    }
 
+    fetch(`${apiBaseUrl}/tasks/${task.id}`, requestSettings)
+    .then(response => {
+            if(response.ok) {
+                getTasks()
+            }
+        }
+    )
 }
 
 function completeTask(task) {
@@ -76,8 +94,14 @@ function addEventListenersToTasks() {
         }
     )
 
-
     // Contrua aqui a Logica para adicionar os Event Listeners para a Lista de Tarefas Concluidas
+    const closedTaskListItensRef = Array.from(closedTasksListRef.children);
+
+    closedTaskListItensRef.forEach((item, index) => {
+        const actionItemTaskRef = item.children[0];
+        const taskFinded = userTasks.closeds[index];
+        actionItemTaskRef.addEventListener('click', () => deleteTask(taskFinded));
+    });
 
 }
 
@@ -87,7 +111,7 @@ function insertTasksHtml() {
     // Logica para inserir as Tarefas Abertas na Lista de Tarefas Abertas no HTML
 
     // Remocao de todos os elementos dentro da Lista de Tarefas em Aberto
-    openTasksListRef.innerHTML = ''
+    openTasksListRef.innerHTML = '';
 
     // For nas tarefas para inseri-las no HTML
     for(let task of userTasks.openeds) {
@@ -106,10 +130,36 @@ function insertTasksHtml() {
                 </div>
             </li>
         `
-
     }
 
     // Construa aqui a Logica para inserir as Tarefas Concluidas na Lista de Tarefas Concluidas no HTML
+    
+
+// Funcao que ira inserir as tarefas concluidas no HTML
+function insertClosedTasksHtml() {
+    // Referencia da Lista de Tarefas Concluidas
+const closedTasksListRef = document.querySelector('#closedTasksList');
+  // Remocao de todos os elementos dentro da Lista de Tarefas Concluidas
+  closedTasksListRef.innerHTML = '';
+
+  // For nas tarefas para inseri-las no HTML
+  for (let task of userTasks.closeds) {
+    // Criacao de uma data baseada na string retornada da API
+    const taskDate = new Date(task.createdAt);
+    // Formatacao da data criada para o padrao brasileiro
+    const taskDateFormated = new Intl.DateTimeFormat('pt-BR').format(taskDate);
+
+    closedTasksListRef.innerHTML += `
+      <li class="tarefa">
+          <div class="not-done"></div>
+          <div class="descricao">
+              <p class="nome">${task.description}</p>
+              <p class="timestamp">Criada em: ${taskDateFormated}</p>
+          </div>
+      </li>
+    `
+  }
+}
     // Muito importante que a logica esteja antes da Funcao addEventListenersToTasks()
 
     addEventListenersToTasks()
@@ -138,7 +188,7 @@ function checkTasks(tasks) {
     }
 
     // Caso tenha dado tudo certo com a Request, nos chamamos a funcao para inserir as Tasks no HTML
-    setTimeout(() => insertTasksHtml(), 1000)
+    setTimeout(() => insertTasksHtml() , 1000)
     // insertTasksHtml()
 
 }
@@ -190,37 +240,32 @@ async function createTask(event) {
 
     // Utilizacao do preventDefault() para a pagina nao recarregar apos o Submit
     event.preventDefault()
-
+    
     // Objeto contendo a Task que sera Cadastrada
     const task = {
         // Descricao da Task(Essa descericao deve conter o valor do Input que o usuario digitou, ela esta fixa com essa String apenas para entendermos como a requisicao funciona)
-        description: 'Teste 4', // Inserir aqui o valor do Input que o usuario digitou
+        description: novaTarefaRef.value, // Inserir aqui o valor do Input que o usuario digitou
         // Completed representa se a Task sera criada como Aberta ou Finalizada
         // False ira significar que esta em abera
         // True ira significar que esta finalizada
         // Voce pode manter o False por padrao, nao é necessario atualizar essa propriedade
         completed: false
     }
-
     // Objeto de configuracao da Request
     const requestSettings = {
         method: 'POST',
         body: JSON.stringify(task),
-        headers: requestHeadersAuth
+        headers: requestHeadersAuth,   
     }
-
     // Request para cadastrar uma nova tarefa
-    const response = await fetch(`${apiBaseUrl}/tasks`, requestSettings)
-
+        const response = await fetch(`${apiBaseUrl}/tasks`, requestSettings)
     // Verificacao se deu tudo certo com a Request
     if(response.ok) {
         // Caso tenha dado tudo certo nos executamos a funcao getTasks() novamente
         // A ideia de executarmos novamente a getTasks() esta em "remontarmos as listas pata o usuario"
         // Toda vez que fazemos uma requisicao para criarmos uma nova tarefa, ela no final das contas é criada no Banco de Dados, porem, a listagem que esta sendo mostrada para o usuario nao contem essa nova tarefa criada. Por isso que precisamos obter as tarefas novamente
-        getTasks()
+        getTasks();
     }
-    
-
 }
 
 // Funcao que ira checar se o Usuario esta de fato Autenticado na Aplicacao
