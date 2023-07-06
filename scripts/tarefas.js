@@ -40,6 +40,45 @@ function logOut() {
     window.location.href = './../index.html'
 }
 
+function buscarNomeUsuario() {
+    // Objeto de Configuração da Request
+    const requestSettings = {
+      headers: requestHeadersAuth
+    };
+  
+    fetch(`${apiBaseUrl}/users/getMe`, requestSettings)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else if (response.status === 401) {
+          // Token de autorização inválido ou expirado, redirecionar para o login
+          logOut();
+        } else {
+          throw new Error('Erro ao buscar os dados do usuário.');
+        }
+      })
+      .then((data) => {
+        renderizaNomeUsuario(data);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar os dados do usuário:', error);
+      });
+  }
+  
+  function renderizaNomeUsuario(usuario) {
+    const nomeUsuarioTela = document.getElementById('nomeUsuario');
+    nomeUsuarioTela.innerText = `${usuario.firstName} ${usuario.lastName}`;
+  }
+  
+  // Verifica se o usuário possui um token de autorização no LocalStorage
+  const authToken = localStorage.getItem('jwt');
+  if (!authToken) {
+    // Redireciona para a página de login caso o token de autorização não seja encontrado
+    redirectToLogin();
+  } else {
+    // Obtém os dados do usuário
+    buscarNomeUsuario();
+  }
 
 // construir a request de Delete aqui :)
 function deleteTask(task) {
